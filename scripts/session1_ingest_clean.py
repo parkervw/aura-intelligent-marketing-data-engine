@@ -10,7 +10,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pandas import DataFrame
@@ -147,6 +147,78 @@ def apply_dtypes(df: DataFrame, mapping: Dict[str, Dict[str, str]]) -> DataFrame
     return df
 
 
+def summarize_numeric(df: DataFrame, col: str) -> Dict[str, Any]:
+    """Return numeric summary for `col` without mutating `df`.
+
+    If the column is non-numeric, a local conversion with
+    `pd.to_numeric(..., errors='coerce')` is used for summary only and
+    `converted_for_summary` is set to True.
+    """
+    if col not in df.columns:
+        return {"missing": True}
+    ser = df[col]
+    converted = False
+    if not ptypes.is_numeric_dtype(ser.dtype):
+        s = pd.to_numeric(ser, errors="coerce")
+        converted = True
+    else:
+        s = ser
+    s_num = s.dropna()
+    missing_count = int(ser.isna().sum())
+    if s_num.empty:
+        return {
+            "min": None,
+            "max": None,
+            "mean": None,
+            "median": None,
+            "missing_count": missing_count,
+            "converted_for_summary": converted,
+        }
+    return {
+        "min": float(s_num.min()),
+        "max": float(s_num.max()),
+        "mean": float(s_num.mean()),
+        "median": float(s_num.median()),
+        "missing_count": missing_count,
+        "converted_for_summary": converted,
+    }
+
+
+def compute_conversion_metrics(
+    df_before: DataFrame, df_after: DataFrame, changed_columns: List[str]
+) -> Dict[str, Dict[str, Optional[float]]]:
+    """Compute conversion/coercion metrics for changed columns.
+
+    Returns mapping column -> metrics dict with keys:
+      - coerced_to_nan (int)
+      - before_min/before_max/after_min/after_max (float|None)
+    Non-numeric min/max are returned as None.
+    """
+    metrics: Dict[str, Dict[str, Optional[float]]] = {}
+    for col in changed_columns:
+        before_isna = int(df_before[col].isna().sum()) if col in df_before.columns else 0
+        after_isna = int(df_after[col].isna().sum()) if col in df_after.columns else 0
+        coerced_to_nan = max(0, after_isna - before_isna)
+
+        def min_max_from_series(ser: pd.Series) -> (Optional[float], Optional[float]):
+            s = pd.to_numeric(ser, errors="coerce").dropna()
+            if s.empty:
+                return (None, None)
+            return (float(s.min()), float(s.max()))
+
+        before_min, before_max = min_max_from_series(df_before[col]) if col in df_before.columns else (None, None)
+        after_min, after_max = min_max_from_series(df_after[col]) if col in df_after.columns else (None, None)
+
+        metrics[col] = {
+            "coerced_to_nan": int(coerced_to_nan),
+            "before_min": before_min,
+            "before_max": before_max,
+            "after_min": after_min,
+            "after_max": after_max,
+        }
+    return metrics
+
+
 def export_json_sample(df: DataFrame, path: Path, n: int = 20) -> None:
     """Export a deterministic top-`n` sample (head) of `df` to JSON.
 
@@ -171,7 +243,7 @@ def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
     """Write a short markdown summary of the inspection and actions taken."""
     LOG.info("Writing report to %s", path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    lines = []
+    lines: List[str] = []
     lines.append(f"# Session 1 — Ingest and Schema Report\n")
     lines.append("## Summary\n")
     lines.append(f"- Rows: {info.get('rows')}\n")
@@ -203,6 +275,63 @@ def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
     else:
         lines.append("- No changes applied.")
 
+    # Age and Income summaries
+    lines.append("\n## Age and Income\n")
+    numeric_summary = info.get("numeric_summary", {})
+    if not numeric_summary:
+        lines.append("No numeric summaries available.\n")
+    else:
+        lines.append("| Column | Min | Max | Mean | Median | Missing | Converted for summary |")
+        lines.append("|---|---:|---:|---:|---:|---:|---:|")
+        for col in ("age", "income"):
+            s = numeric_summary.get(col)
+            if s is None:
+                lines.append(f"| {col} | Missing from dataset | — | — | — | — | — |")
+                continue
+            if s.get("missing"):
+                lines.append(f"| {col} | Missing from dataset | — | — | — | — | — |")
+                continue
+            minv = s.get("min")
+            maxv = s.get("max")
+            meanv = s.get("mean")
+            medianv = s.get("median")
+            missingc = s.get("missing_count", 0)
+            converted = s.get("converted_for_summary", False)
+            def fmt(x):
+                return f"{x:.3f}" if isinstance(x, float) else "—"
+            lines.append(
+                f"| {col} | {fmt(minv)} | {fmt(maxv)} | {fmt(meanv)} | {fmt(medianv)} | {missingc} | {converted} |"
+            )
+
+    # Conversion metrics
+    lines.append("\n## Conversion Metrics\n")
+    conv = info.get("conversion_metrics", {})
+    if not conv:
+        lines.append("No conversion metrics were generated.\n")
+    else:
+        lines.append("| Column | coerced_to_nan | before_min | before_max | after_min | after_max |")
+        lines.append("|---|---:|---:|---:|---:|---:|")
+        for col, m in conv.items():
+            coerced = m.get("coerced_to_nan", 0)
+            def maybe_fmt(v):
+                return f"{v:.3f}" if isinstance(v, float) else "—"
+            lines.append(
+                f"| {col} | {coerced} | {maybe_fmt(m.get('before_min'))} | {maybe_fmt(m.get('before_max'))} | {maybe_fmt(m.get('after_min'))} | {maybe_fmt(m.get('after_max'))} |"
+            )
+
+    # Recommended changes before detailed analysis
+    lines.append("\n## Recommended changes before detailed analysis\n")
+    if recs:
+        for col, r in recs.items():
+            lines.append(f"- {col}: {r.get('recommended')} — {r.get('reason')}")
+    coerced_warnings = []
+    for col, m in conv.items():
+        if m.get("coerced_to_nan", 0) > 0:
+            coerced_warnings.append(col)
+    if coerced_warnings:
+        for c in coerced_warnings:
+            lines.append(f"- Investigate non-numeric source values in {c} before relying on numeric analysis.")
+
     with path.open("w", encoding="utf8") as fh:
         fh.write("\n".join(lines))
 
@@ -220,6 +349,19 @@ def main() -> None:
     info: Dict[str, Any] = inspect_schema(df)
     LOG.info("Inspected schema: %s", {"rows": info['rows'], "columns": info['columns']})
 
+    # Numeric summaries for Age and Income (pre-conversion)
+    numeric_summary: Dict[str, Optional[Dict[str, Any]]] = {}
+    for col in ("age", "income"):
+        if col in df.columns:
+            numeric_summary[col] = summarize_numeric(df, col)
+        else:
+            numeric_summary[col] = None
+    info["numeric_summary"] = numeric_summary
+
+    # Capture dtypes before conversion
+    dtypes_before = df.dtypes.apply(str)
+    info["dtypes_before"] = dtypes_before.to_dict()
+
     recs = recommend_dtypes(df)
     info["recommended"] = recs
 
@@ -229,6 +371,16 @@ def main() -> None:
     # record applied dtypes
     applied = {col: str(df_converted[col].dtype) for col in df_converted.columns}
     info["applied"] = applied
+
+    # Capture dtypes after conversion and changed columns
+    dtypes_after = df_converted.dtypes.apply(str)
+    info["dtypes_after"] = dtypes_after.to_dict()
+    changed_columns = [c for c in df.columns if dtypes_before[c] != dtypes_after.get(c)]
+    info["changed_columns"] = changed_columns
+
+    # Compute conversion/coercion metrics for changed columns
+    metrics = compute_conversion_metrics(df, df_converted, changed_columns) if changed_columns else {}
+    info["conversion_metrics"] = metrics
 
     export_json_sample(df_converted, out_json, n=20)
     export_csv(df_converted, out_csv)
