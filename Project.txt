@@ -1,0 +1,147 @@
+<Introduction>
+ClickO is a Boston, MA-based email marketing company. ClickO delivers integrated data analytics
+services to its customers, primarily large enterprises in the retail space.
+ClickO plans to expand from being purely an email
+marketing platform to a comprehensive AI/ML-based
+digital marketing and recommendation platform. This
+new platform will offer tools and analytics to help digital
+marketers predict demand, optimize content, and
+customize digital campaigns that reach audiences on
+multiple channels.
+To this end, ClickO is developing a new product called
+Aura. It aims to collate audience information from
+multiple sources and provides a toolkit for digital
+marketers to reach similar audiences across multiple
+platforms.
+Aura toolkit consists of the following:
+1. Real-time recommendation system: It ingests
+disparate data on products, people, geography, and
+other factors to make relevant recommendations.
+2. Content optimization engine: Aura’s marketing ML
+algorithm can estimate which types of content,
+questions, and headlines are most likely to resonate
+with your target audience.
+3. Custom promotion engine: Aura leverages deep
+learning to help customers tailor marketing
+promotions for new products or services.
+4. Demand forecasting engine: Using historical data,
+this engine can predict demand for certain products
+and services
+<\Introduction>
+
+<project_statement>
+Develop a comprehensive solution for data aggregation, wrangling, and visualization using a
+healthcare dataset for the Aura platform
+. The goal is to effectively manage and process complex healthcare data to enable insightful
+analysis and enhance data-driven decision-making capabilities within Aura.
+<\project_statement>
+
+<Dataset_Description>
+The base dataset is NSMES1988.csv. Within that file are the following columns and their description:
+Column : Description
+visits : Number of physician office visits 
+health : Factor indicating self-perceived health
+nvisits : Number of non-physician office visits 
+chronic : Number of chronic conditions
+ovisits : Number of physician hospital outpatient visits 
+adl : Factor indicating whether the individual has a condition that limits activities of daily living
+novisits : Number of non-physician hospital outpatient visits 
+region : Factor indicating region
+emergency : Emergency room visits age Age in years (divided by 10)
+hospital : Number of hospital stays 
+married : Factor. Is the individual married?
+gender : Factor indicating gender income 
+Family : income in USD 10000
+school : Number of years of education 
+insurance : Factor. Is the individual covered by private insurance?
+employed : Factor. Is the individual employed?
+medicaid : Factor. Is the individual covered by Medicaid?
+<\Dataset_Description>
+
+<session_1_tasks>
+Task Set 1: Import, Export, and Clean data
+• Import relevant Python libraries necessary for Python programming and for doing
+numerical operations.
+• Import the CSV file – NSMES1988.csv into a dataframe.
+• Inspect the data and report the details from physical inspection – rows, columns, data
+types etc.
+• Find out if the data is clean or if the data has missing values.
+• Comment on the data types, their values and range, specifically on age and income
+columns.
+• Export the data to JSON as NSMES1988.json format file and view and enter your
+comments.
+• Perform memory information on the data and recommend what non-default data types
+would you recommend to optimize memory settings for the dataframe.
+• What changes would you recommend on the dataframe before attempting a detailed data
+analysis?
+• Export the data frame as a new CSV file NSMES1988new.csv and store it in the local space
+for likely use in other assignments.
+• Write a short report in markdown on the visual observations of the data and of session 1 tasks.
+<\session_1_tasks>
+
+<session_2_tasks>
+Task Set 1: Data Processing and Statistical Analysis
+• Import relevant Python libraries.
+• Import the CSV file – NSMES1988new.csv into a dataframe.
+• Perform memory analysis of the new dataframe and compare it with the memory of the
+dataframe in the previous session and mark your comments.
+• Perform the following operations on age and income columns. Multiply age by 10 and
+income by 10000.
+• Perform basic statistical analysis on the new dataframe and generate a brief report on
+the outcome. Save the dataframe as NSMES1988updated.csv file in the local space for
+possible future use.
+• Invoke describe command on the dataframe and compare that with the basic statistical
+analysis done in the previous task.
+• Indicate which of the columns are not eligible for statistical analysis and indicate possible
+datatype changes, and report.
+• Make changes to the recommended file based on the reporting from the previous task, export it as
+a new .csv file for possible future use.
+• Prepare a brief report in markdown of session 2 tasks.
+<\session_2_tasks>
+
+<session_3_tasks>
+Task Set 1: Data Analysis with Pandas
+• Import relevant Python libraries necessary for Python and Pandas analysis.
+• Import the CSV file NSMES1988updated.csv file and create a new dataframe for working
+with Pandas.
+• Identify different types of data and report it.
+• Identify Categorical types in the data.
+• Perform a detailed Data pivoting on the dataframe and report it.
+• Include the following categorical data in your analysis
+• Health
+• Region
+• Prepare a detailed report on your analysis and observations.
+Task Set 2: Analyze and Clean data
+• Import relevant Python libraries necessary for Python and Pandas analysis.
+• Import the CSV file NSMES1988updated.csv file and create a new dataframe for working
+with Pandas.
+• Perform analysis based on the following criteria: Different types of visits, Gender, Marital
+Status, School, Income, Employment Status, Insurance, Medical Aid
+• Explore and analyze the dataset to gain insights into how different factors relate to each
+other within the dataset. By grouping the data according to specific demographic and
+economic criteria, create a series of distribution tables by considering the below
+instructions:
+• Age and Gender Distribution: Generate a table to view the number of individuals within
+each age group, separated by gender.
+• Health Status by Gender: Create a distribution table that categorizes individuals by their
+health status, differentiated by gender.
+• Income Distribution by Gender: Compile a table to examine the income distribution
+across genders.
+• Regional Income Distribution: Prepare a table to display the income distribution across
+various regions.
+• Age-wise Income Analysis: Develop a table to analyze the relationship between age and
+income.
+• Create a written Report in markdown on your findings and observations from session 3 tasks.
+<\session_3_tasks>
+
+<session_4_tasks>
+Task Set 1: Visualize data
+• Import relevant Python libraries necessary for Python and Pandas analysis, as well as
+visualization
+• Import the CSV file NSMES1988updated.csv file and create a new dataframe for working
+with Pandas
+• Indicate the plotting library choice and reasons for the choice
+• Plot the analysis done in session 3 for the categorical data - Health and Region
+• Plot the analyses done in session 4 (analysis and correlation)
+• Prepare a detailed report in markdown and record your observations from session 4 tasks.
+<\session_4_tasks>
