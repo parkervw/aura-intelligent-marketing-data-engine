@@ -147,12 +147,18 @@ def apply_dtypes(df: DataFrame, mapping: Dict[str, Dict[str, str]]) -> DataFrame
     return df
 
 
-def export_json(df: DataFrame, path: Path) -> None:
-    LOG.info("Exporting JSON to %s", path)
+def export_json_sample(df: DataFrame, path: Path, n: int = 20) -> None:
+    """Export a deterministic top-`n` sample (head) of `df` to JSON.
+
+    Writes JSON records (list of dicts) with `ensure_ascii=False` and
+    `indent=2`. Overwrites silently if file exists.
+    """
+    LOG.info("Exporting JSON sample (n=%d) to %s", n, path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    records = df.to_dict(orient="records")
+    rows = df.head(n)
+    records = rows.to_dict(orient="records")
     with path.open("w", encoding="utf8") as fh:
-        json.dump(records, fh, indent=2, default=str)
+        json.dump(records, fh, indent=2, ensure_ascii=False)
 
 
 def export_csv(df: DataFrame, path: Path) -> None:
@@ -204,7 +210,7 @@ def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
 def main() -> None:
     setup_logging()
     input_path = Path("data/raw/NSMES1988.csv")
-    out_json = Path("data/processed/NSMES1988.json")
+    out_json = Path("data/processed/NSMES1988_sample.json")
     out_csv = Path("data/processed/NSMES1988new.csv")
     report_path = Path("reports/session1.md")
 
@@ -224,7 +230,7 @@ def main() -> None:
     applied = {col: str(df_converted[col].dtype) for col in df_converted.columns}
     info["applied"] = applied
 
-    export_json(df_converted, out_json)
+    export_json_sample(df_converted, out_json, n=20)
     export_csv(df_converted, out_csv)
     write_markdown_report(info, report_path)
 
