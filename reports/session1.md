@@ -8,8 +8,9 @@
 
 ## Column dtypes and missing values
 
+
 | Column | Dtype | Missing |
-|---|---:|---:|
+| :--- | :--- | ---: |
 | Unnamed: 0 | int64 | 0 |
 | visits | int64 | 0 |
 | nvisits | int64 | 0 |
@@ -32,8 +33,9 @@
 
 ## Recommended dtype changes
 
+
 | Column | Recommended | Reason |
-|---|---|---|
+| :--- | :--- | :--- |
 | Unnamed: 0 | int32 | Fits in int32; downcast from int64 |
 | visits | int32 | Fits in int32; downcast from int64 |
 | nvisits | int32 | Fits in int32; downcast from int64 |
@@ -56,53 +58,58 @@
 
 ## Changes applied
 
-- Unnamed: 0: set to Int32
-- visits: set to Int32
-- nvisits: set to Int32
-- ovisits: set to Int32
-- novisits: set to Int32
-- emergency: set to Int32
-- hospital: set to Int32
-- health: set to category
-- chronic: set to Int32
-- adl: set to category
-- region: set to category
-- age: set to Float32
-- gender: set to category
-- married: set to category
-- school: set to Int32
-- income: set to Float32
-- employed: set to category
-- insurance: set to category
-- medicaid: set to category
+
+| Column | Applied Dtype |
+| :--- | :--- |
+| Unnamed: 0 | Int32 |
+| visits | Int32 |
+| nvisits | Int32 |
+| ovisits | Int32 |
+| novisits | Int32 |
+| emergency | Int32 |
+| hospital | Int32 |
+| health | category |
+| chronic | Int32 |
+| adl | category |
+| region | category |
+| age | Float32 |
+| gender | category |
+| married | category |
+| school | Int32 |
+| income | Float32 |
+| employed | category |
+| insurance | category |
+| medicaid | category |
 
 ## Age and Income
 
-| Column | Min | Max | Mean | Median | Missing | Converted for summary |
-|---|---:|---:|---:|---:|---:|---:|
-| age | 6.600 | 10.900 | 7.402 | 7.300 | 0 | False |
-| income | -1.012 | 54.835 | 2.527 | 1.698 | 0 | False |
+
+| Column | Min | Max | Mean | Median | Missing |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| age | 6.60 | 10.90 | 7.40 | 7.30 | 0 |
+| income | -1.01 | 54.84 | 2.53 | 1.70 | 0 |
 
 ## Conversion Metrics
 
-| Column | coerced_to_nan | before_min | before_max | after_min | after_max |
-|---|---:|---:|---:|---:|---:|
-| Unnamed: 0 | 0 | 1.000 | 4406.000 | 1.000 | 4406.000 |
-| visits | 0 | 0.000 | 89.000 | 0.000 | 89.000 |
-| nvisits | 0 | 0.000 | 104.000 | 0.000 | 104.000 |
-| ovisits | 0 | 0.000 | 141.000 | 0.000 | 141.000 |
-| novisits | 0 | 0.000 | 155.000 | 0.000 | 155.000 |
-| emergency | 0 | 0.000 | 12.000 | 0.000 | 12.000 |
-| hospital | 0 | 0.000 | 8.000 | 0.000 | 8.000 |
+
+| Column | Coerced to NaN | Before Min | Before Max | After Min | After Max |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Unnamed: 0 | 0 | 1.00 | 4406.00 | 1.00 | 4406.00 |
+| visits | 0 | 0.00 | 89.00 | 0.00 | 89.00 |
+| nvisits | 0 | 0.00 | 104.00 | 0.00 | 104.00 |
+| ovisits | 0 | 0.00 | 141.00 | 0.00 | 141.00 |
+| novisits | 0 | 0.00 | 155.00 | 0.00 | 155.00 |
+| emergency | 0 | 0.00 | 12.00 | 0.00 | 12.00 |
+| hospital | 0 | 0.00 | 8.00 | 0.00 | 8.00 |
 | health | 0 | — | — | — | — |
-| chronic | 0 | 0.000 | 8.000 | 0.000 | 8.000 |
+| chronic | 0 | 0.00 | 8.00 | 0.00 | 8.00 |
 | adl | 0 | — | — | — | — |
 | region | 0 | — | — | — | — |
-| age | 0 | 6.600 | 10.900 | 6.600 | 10.900 |
+| age | 0 | 6.60 | 10.90 | 6.60 | 10.90 |
 | gender | 0 | — | — | — | — |
 | married | 0 | — | — | — | — |
-| school | 0 | 0.000 | 18.000 | 0.000 | 18.000 |
-| income | 0 | -1.012 | 54.835 | -1.013 | 54.835 |
+| school | 0 | 0.00 | 18.00 | 0.00 | 18.00 |
+| income | 0 | -1.01 | 54.84 | -1.01 | 54.84 |
 | employed | 0 | — | — | — | — |
 | insurance | 0 | — | — | — | — |
 | medicaid | 0 | — | — | — | — |
