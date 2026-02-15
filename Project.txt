@@ -50,8 +50,8 @@ region : Factor indicating region
 emergency : Emergency room visits age Age in years (divided by 10)
 hospital : Number of hospital stays 
 married : Factor. Is the individual married?
-gender : Factor indicating gender income 
-Family : income in USD 10000
+gender : Factor indicating gender
+income : Family income in USD 10000
 school : Number of years of education 
 insurance : Factor. Is the individual covered by private insurance?
 employed : Factor. Is the individual employed?
