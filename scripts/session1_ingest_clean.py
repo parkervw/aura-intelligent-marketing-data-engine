@@ -239,57 +239,87 @@ def export_csv(df: DataFrame, path: Path) -> None:
     df.to_csv(path, index=False)
 
 
+def md_table(headers: List[str], rows: List[List[str]], align: List[str]) -> str:
+    """Build a GitHub-flavored Markdown table string with alignment.
+
+    align values: 'left', 'center', 'right'.
+    """
+    if not headers:
+        return ""
+    # Header
+    header_line = "| " + " | ".join(headers) + " |"
+    # Alignment row
+    align_map = {"left": ":---", "center": ":---:", "right": "---:"}
+    align_row = "| " + " | ".join(align_map.get(a, ":---") for a in align) + " |"
+    body_lines = []
+    for r in rows:
+        # Ensure row has same length as headers
+        cells = [str(c) for c in r]
+        body_lines.append("| " + " | ".join(cells) + " |")
+    return "\n".join([header_line, align_row] + body_lines)
+
+
 def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
     """Write a short markdown summary of the inspection and actions taken."""
     LOG.info("Writing report to %s", path)
     path.parent.mkdir(parents=True, exist_ok=True)
+
     lines: List[str] = []
     lines.append(f"# Session 1 — Ingest and Schema Report\n")
     lines.append("## Summary\n")
     lines.append(f"- Rows: {info.get('rows')}\n")
     lines.append(f"- Columns: {info.get('columns')}\n")
 
+    # 1) Column dtypes and missing
     lines.append("## Column dtypes and missing values\n")
     dtypes = info.get("dtypes", {})
     missing = info.get("missing", {})
-    lines.append("| Column | Dtype | Missing |")
-    lines.append("|---|---:|---:|")
+    rows_table: List[List[str]] = []
     for col in dtypes:
-        lines.append(f"| {col} | {dtypes[col]} | {missing.get(col, 0)} |")
+        miss = missing.get(col, 0)
+        rows_table.append([col, dtypes[col], f"{miss:,}"])
+    lines.append("")
+    lines.append(md_table(["Column", "Dtype", "Missing"], rows_table, ["left", "left", "right"]))
+    lines.append("")
 
-    lines.append("\n## Recommended dtype changes\n")
+    # 2) Recommended dtype changes
+    lines.append("## Recommended dtype changes\n")
     recs = info.get("recommended", {})
-    if recs:
-        lines.append("| Column | Recommended | Reason |")
-        lines.append("|---|---|---|")
+    if not recs:
+        lines.append("No recommendations.\n")
+    else:
+        rec_rows: List[List[str]] = []
         for col, r in recs.items():
-            lines.append(f"| {col} | {r.get('recommended')} | {r.get('reason')} |")
-    else:
-        lines.append("No recommendations generated.")
+            rec_rows.append([col, r.get("recommended", ""), r.get("reason", "")])
+        lines.append("")
+        lines.append(md_table(["Column", "Recommended", "Reason"], rec_rows, ["left", "left", "left"]))
+        lines.append("")
 
-    lines.append("\n## Changes applied\n")
+    # 3) Changes applied
+    lines.append("## Changes applied\n")
     applied = info.get("applied", {})
-    if applied:
-        for col, new in applied.items():
-            lines.append(f"- {col}: set to {new}")
+    if not applied:
+        lines.append("No changes applied.\n")
     else:
-        lines.append("- No changes applied.")
+        app_rows: List[List[str]] = []
+        for col, new in applied.items():
+            app_rows.append([col, new])
+        lines.append("")
+        lines.append(md_table(["Column", "Applied Dtype"], app_rows, ["left", "left"]))
+        lines.append("")
 
-    # Age and Income summaries
-    lines.append("\n## Age and Income\n")
+    # 4) Age and Income summary
+    lines.append("## Age and Income\n")
     numeric_summary = info.get("numeric_summary", {})
     if not numeric_summary:
-        lines.append("No numeric summaries available.\n")
+        lines.append("Age/Income columns not present.\n")
     else:
-        lines.append("| Column | Min | Max | Mean | Median | Missing | Converted for summary |")
-        lines.append("|---|---:|---:|---:|---:|---:|---:|")
+        ai_rows: List[List[str]] = []
+        converted_notes: List[str] = []
         for col in ("age", "income"):
             s = numeric_summary.get(col)
-            if s is None:
-                lines.append(f"| {col} | Missing from dataset | — | — | — | — | — |")
-                continue
-            if s.get("missing"):
-                lines.append(f"| {col} | Missing from dataset | — | — | — | — | — |")
+            if s is None or s.get("missing"):
+                ai_rows.append([col, "—", "—", "—", "—", "—"])
                 continue
             minv = s.get("min")
             maxv = s.get("max")
@@ -297,30 +327,35 @@ def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
             medianv = s.get("median")
             missingc = s.get("missing_count", 0)
             converted = s.get("converted_for_summary", False)
-            def fmt(x):
-                return f"{x:.3f}" if isinstance(x, float) else "—"
-            lines.append(
-                f"| {col} | {fmt(minv)} | {fmt(maxv)} | {fmt(meanv)} | {fmt(medianv)} | {missingc} | {converted} |"
-            )
+            def fmt_num(v, prec=2):
+                return f"{v:,.{prec}f}" if isinstance(v, float) else "—"
+            ai_rows.append([col, fmt_num(minv, 2), fmt_num(maxv, 2), fmt_num(meanv, 2), fmt_num(medianv, 2), f"{missingc:,}"])
+            if converted:
+                converted_notes.append(col)
+        lines.append("")
+        lines.append(md_table(["Column", "Min", "Max", "Mean", "Median", "Missing"], ai_rows, ["left", "right", "right", "right", "right", "right"]))
+        lines.append("")
+        if converted_notes:
+            lines.append("Values converted to numeric for summary only for: " + ", ".join(converted_notes) + ".\n")
 
-    # Conversion metrics
-    lines.append("\n## Conversion Metrics\n")
+    # 5) Conversion metrics
+    lines.append("## Conversion Metrics\n")
     conv = info.get("conversion_metrics", {})
     if not conv:
-        lines.append("No conversion metrics were generated.\n")
+        lines.append("No conversion metrics; no dtype changes applied.\n")
     else:
-        lines.append("| Column | coerced_to_nan | before_min | before_max | after_min | after_max |")
-        lines.append("|---|---:|---:|---:|---:|---:|")
+        cm_rows: List[List[str]] = []
         for col, m in conv.items():
-            coerced = m.get("coerced_to_nan", 0)
+            coerced = int(m.get("coerced_to_nan", 0))
             def maybe_fmt(v):
-                return f"{v:.3f}" if isinstance(v, float) else "—"
-            lines.append(
-                f"| {col} | {coerced} | {maybe_fmt(m.get('before_min'))} | {maybe_fmt(m.get('before_max'))} | {maybe_fmt(m.get('after_min'))} | {maybe_fmt(m.get('after_max'))} |"
-            )
+                return f"{v:.2f}" if isinstance(v, float) else "—"
+            cm_rows.append([col, f"{coerced:,}", maybe_fmt(m.get("before_min")), maybe_fmt(m.get("before_max")), maybe_fmt(m.get("after_min")), maybe_fmt(m.get("after_max"))])
+        lines.append("")
+        lines.append(md_table(["Column", "Coerced to NaN", "Before Min", "Before Max", "After Min", "After Max"], cm_rows, ["left", "right", "right", "right", "right", "right"]))
+        lines.append("")
 
     # Recommended changes before detailed analysis
-    lines.append("\n## Recommended changes before detailed analysis\n")
+    lines.append("## Recommended changes before detailed analysis\n")
     if recs:
         for col, r in recs.items():
             lines.append(f"- {col}: {r.get('recommended')} — {r.get('reason')}")
