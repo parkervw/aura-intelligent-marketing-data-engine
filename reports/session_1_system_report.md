@@ -113,25 +113,3 @@
 | employed | 0 | — | — | — | — |
 | insurance | 0 | — | — | — | — |
 | medicaid | 0 | — | — | — | — |
-
-## Recommended changes before detailed analysis
-
-- Unnamed: 0: int32 — Fits in int32; downcast from int64
-- visits: int32 — Fits in int32; downcast from int64
-- nvisits: int32 — Fits in int32; downcast from int64
-- ovisits: int32 — Fits in int32; downcast from int64
-- novisits: int32 — Fits in int32; downcast from int64
-- emergency: int32 — Fits in int32; downcast from int64
-- hospital: int32 — Fits in int32; downcast from int64
-- health: category — 3 unique values (0.07%); good fit for categorical
-- chronic: int32 — Fits in int32; downcast from int64
-- adl: category — 2 unique values (0.05%); good fit for categorical
-- region: category — 4 unique values (0.09%); good fit for categorical
-- age: float32 — Float column — downcast to float32 to save memory
-- gender: category — 2 unique values (0.05%); good fit for categorical
-- married: category — 2 unique values (0.05%); good fit for categorical
-- school: int32 — Fits in int32; downcast from int64
-- income: float32 — Float column — downcast to float32 to save memory
-- employed: category — 2 unique values (0.05%); good fit for categorical
-- insurance: category — 2 unique values (0.05%); good fit for categorical
-- medicaid: category — 2 unique values (0.05%); good fit for categorical

@@ -354,19 +354,6 @@ def write_markdown_report(info: Dict[str, Any], path: Path) -> None:
         lines.append(md_table(["Column", "Coerced to NaN", "Before Min", "Before Max", "After Min", "After Max"], cm_rows, ["left", "right", "right", "right", "right", "right"]))
         lines.append("")
 
-    # Recommended changes before detailed analysis
-    lines.append("## Recommended changes before detailed analysis\n")
-    if recs:
-        for col, r in recs.items():
-            lines.append(f"- {col}: {r.get('recommended')} — {r.get('reason')}")
-    coerced_warnings = []
-    for col, m in conv.items():
-        if m.get("coerced_to_nan", 0) > 0:
-            coerced_warnings.append(col)
-    if coerced_warnings:
-        for c in coerced_warnings:
-            lines.append(f"- Investigate non-numeric source values in {c} before relying on numeric analysis.")
-
     with path.open("w", encoding="utf8") as fh:
         fh.write("\n".join(lines))
 
@@ -376,7 +363,7 @@ def main() -> None:
     input_path = Path("data/raw/NSMES1988.csv")
     out_json = Path("data/processed/NSMES1988_sample.json")
     out_csv = Path("data/processed/NSMES1988new.csv")
-    report_path = Path("reports/session1.md")
+    report_path = Path("reports/session_1_system_report.md")
 
     LOG.info("Starting session1 ingest/clean")
     df = load_csv(input_path)
