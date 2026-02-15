@@ -200,7 +200,7 @@ def compute_conversion_metrics(
         after_isna = int(df_after[col].isna().sum()) if col in df_after.columns else 0
         coerced_to_nan = max(0, after_isna - before_isna)
 
-        def min_max_from_series(ser: pd.Series) -> (Optional[float], Optional[float]):
+        def min_max_from_series(ser: pd.Series) -> tuple[Optional[float], Optional[float]]:
             s = pd.to_numeric(ser, errors="coerce").dropna()
             if s.empty:
                 return (None, None)
